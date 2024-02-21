@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session
 import pymysql
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
+app.secret_key = 'your_secret_key'  # 세션에 사용될 비밀키 설정
 
 # MariaDB 연결 설정
 connection = pymysql.connect(
@@ -16,18 +16,24 @@ connection = pymysql.connect(
 # 메인 페이지 라우트
 @app.route('/')
 def index():
-    return render_template('main.html', logged_in='username' in session)
+    # 세션에서 username 키가 있는지 확인하여 로그인 상태 확인
+    # 세션에 username 키가 있다면 로그인 상태로 간주하여 True 반환, 없으면 False 반환
+    logged_in = 'username' in session
+    return render_template('main.html', logged_in=logged_in)
 
 # 로그인 페이지 라우트
 @app.route('/login')
 def login():
     return render_template('login.html')
 
+# 로그아웃 기능
 @app.route('/logout')
 def logout():
+    # 세션에서 username 키 삭제 (로그아웃)
     session.pop('username', None)
-    return redirect(url_for('index'))
+    return redirect(url_for('index'))  # 메인 페이지로 리다이렉트
 
+# 로그인 폼 제출 처리
 @app.route('/loginForm', methods=['POST'])
 def loginForm():
     if request.method == 'POST':
@@ -44,7 +50,7 @@ def loginForm():
         if user:
             # 로그인 성공 시 세션에 사용자 정보 저장
             session['username'] = username
-            return redirect(url_for('index'))
+            return redirect(url_for('index'))  # 메인 페이지로 리다이렉트
         else:
             # 로그인 실패 시 처리
             return "로그인 실패"
