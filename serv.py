@@ -1,8 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import pymysql
+import secrets
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # 세션에 사용될 비밀키 설정
+
+# 난수로 생성된 시크릿 키 설정
+app.secret_key = secrets.token_hex(16)
 
 # MariaDB 연결 설정
 connection = pymysql.connect(
@@ -19,6 +22,7 @@ def index():
     # 세션에서 username 키가 있는지 확인하여 로그인 상태 확인
     # 세션에 username 키가 있다면 로그인 상태로 간주하여 True 반환, 없으면 False 반환
     logged_in = 'username' in session
+    print("세션에 저장된 키:", session.get('username'))  # 콘솔에 세션에 저장된 키 출력
     return render_template('main.html', logged_in=logged_in)
 
 # 로그인 페이지 라우트
@@ -48,8 +52,8 @@ def loginForm():
             user = cursor.fetchone()
             
         if user:
-            # 로그인 성공 시 세션에 사용자 정보 저장
-            session['username'] = username
+            # 로그인 성공 시 세션에 난수 키 저장
+            session['username'] = secrets.token_hex(16)
             return redirect(url_for('index'))  # 메인 페이지로 리다이렉트
         else:
             # 로그인 실패 시 처리
