@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 import pymysql
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key'
 
 # MariaDB 연결 설정
 connection = pymysql.connect(
@@ -15,12 +16,17 @@ connection = pymysql.connect(
 # 메인 페이지 라우트
 @app.route('/')
 def index():
-    return render_template('main.html')
+    return render_template('main.html', logged_in='username' in session)
 
 # 로그인 페이지 라우트
 @app.route('/login')
 def login():
     return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    return redirect(url_for('index'))
 
 @app.route('/loginForm', methods=['POST'])
 def loginForm():
@@ -36,7 +42,8 @@ def loginForm():
             user = cursor.fetchone()
             
         if user:
-            # 로그인 성공 시 처리 (예: 세션 설정)
+            # 로그인 성공 시 세션에 사용자 정보 저장
+            session['username'] = username
             return redirect(url_for('index'))
         else:
             # 로그인 실패 시 처리
