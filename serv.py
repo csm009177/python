@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for
-import pymysql # pip install pymysql
+import pymysql
 
 app = Flask(__name__)
 
@@ -15,20 +15,15 @@ connection = pymysql.connect(
 # 메인 페이지 라우트
 @app.route('/')
 def index():
-    if request.method == 'POST':
-        # POST 요청일 때, 토글 상태를 확인하고 출력합니다.
-        toggle_state = request.form.get('toggle')
-        if toggle_state:
-            return "토글이 켜졌습니다."
-        else:
-            return "토글이 꺼졌습니다."
-    else:
-        # GET 요청일 때, index.html을 렌더링합니다.
-        return render_template('index.html')
+    return render_template('main.html')
 
 # 로그인 페이지 라우트
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login')
 def login():
+    return render_template('login.html')
+
+@app.route('/loginForm', methods=['POST'])
+def loginForm():
     if request.method == 'POST':
         # 폼에서 전달된 아이디와 비밀번호 가져오기
         username = request.form['username']
@@ -36,19 +31,18 @@ def login():
         
         # MariaDB에서 유저 정보 확인
         with connection.cursor() as cursor:
-            query = "SELECT * FROM users WHERE id=%s AND pw=%s"
-            cursor.execute(query, (username, password))
+            sql = "SELECT * FROM users WHERE id=%s AND pw=%s"
+            cursor.execute(sql, (username, password))
             user = cursor.fetchone()
-
+            
         if user:
             # 로그인 성공 시 처리 (예: 세션 설정)
-            return "로그인 성공"
+            return redirect(url_for('index'))
         else:
             # 로그인 실패 시 처리
             return "로그인 실패"
     else:
-        # GET 요청일 때는 로그인 폼 보여주기
-        return render_template('login.html')
+        return redirect(url_for('login'))  # POST 요청이 아닌 경우 로그인 페이지로 리다이렉트
 
 if __name__ == '__main__':
     app.run(debug=True)
